@@ -4,11 +4,30 @@ metadata:
   name: kedalab-helper
   namespace: solace
 spec:
-  containers:
-  - name: sdk-perf
-    image: ghcr.io/solacelabs/kedalab-helper:latest
-    # Just spin & wait forever
-    command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do sleep 10; done;" ]
-    imagePullPolicy: Always
   restartPolicy: Never
+  containers:
+    - name: sdk-perf
+      image: ghcr.io/solacelabs/kedalab-helper:latest
+      # Just spin & wait forever
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 10; done;" ]
+      imagePullPolicy: Always
+      env:
+        - name: "ADMIN_USER"
+          valueFrom:
+            secretKeyRef:
+              name: kedalab-solace-secret
+              key: SEMP_USER
+        - name: "ADMIN_PWD"
+          valueFrom:
+            secretKeyRef:
+              name: kedalab-solace-secret
+              key: SEMP_PWD
+      volumeMounts:
+        - name: kedalab-solace-configmap
+          mountPath: /keda-config
+  volumes:
+    - name: kedalab-solace-configmap
+      configMap:
+        name: kedalab-solace-configmap
+        defaultMode: 0744

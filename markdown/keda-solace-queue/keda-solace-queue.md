@@ -193,6 +193,31 @@ Duration: 0:20:00
 
 After these steps are complete, we will have a configured Solace Event Broker, our kedalab-helper pod will be available, and the solace-consumer will be ready to process messages.
 
+### Create kedalab-solace-secret
+The kedalab-solace secret will contain the semp user and password and the consumer user and password so these will not be available in any script of config yaml file.
+
+```bash
+kubectl delete secret -n solace generic kedalab-solace-secret --ignore-not-found
+kubectl create secret -n solace generic kedalab-solace-secret \
+  --from-literal=SEMP_USER=admin \
+  --from-literal=SEMP_PWD=admin \
+  --from-literal=SOLACE_CLIENT_USERNAME=consumer-user \
+  --from-literal=SOLACE_CLIENT_PASSWORD=consumer-pwd \
+  --save-config --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### Create kedalab-solace-configmap
+The kedalab-solace configMap will contain the shell script and configuration json files to configure the PubSub+ Event broker. This way you can easily modify the broker-config if needed
+This will be mapped on  the folder /broker-config in the kedalab-helper
+
+```bash
+wget https://codelabs.solace.dev/codelabs/keda-solace-queue/broker-config/kedalab-helper.yaml
+kubectl delete configmap -n solace generic kedalab-solace-configmap --ignore-not-found
+kubectl create configmap -n solace kedalab-solace-configmap \
+  --from-file /broker-config \
+  --save-config --dry-run=client -o yaml | kubectl apply -f -  
+```
+
 ### Create kedalab-helper Pod
 The kedalab-help pod contains configuration scripts and tools we need to complete the lab. We will create it on our Kubernetes cluster.
 
